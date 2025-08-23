@@ -75,7 +75,7 @@ file = st.file_uploader("📂 Upload a CSV file", type=["csv"])
 if file:
     df = pd.read_csv(file)
     st.subheader("🔎 Data Preview")
-    st.dataframe(df.head())
+    st.dataframe(df.head(100))
 
     # Choose column for visualization
     column = st.selectbox("📈 Pick a numeric column to plot", df.select_dtypes(include="number").columns)
