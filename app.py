@@ -85,15 +85,15 @@ def load_data() -> pd.DataFrame:
     if df.empty:
         return df
 
-    # Normalize dtypes -> force NAIVE (no tz)
+    # Parse datetimes robustly: accept mixed tz, then drop tz → NAIVE
     for c in ["created_at_iso","ready_until_iso","completed_at_iso"]:
         if c in df.columns:
-            df[c] = pd.to_datetime(df[c], errors="coerce").dt.tz_localize(None)
+            df[c] = pd.to_datetime(df[c], errors="coerce", utc=True).dt.tz_convert(None)
 
     if "qty_meals" in df.columns:
         df["qty_meals"] = pd.to_numeric(df["qty_meals"], errors="coerce").fillna(0).astype(int)
 
-    # Auto-expire using NAIVE 'now'
+    # Use NAIVE 'now' for comparisons
     now = datetime.now()
     def _expire_row(row):
         ru = row.get("ready_until_iso")
@@ -107,11 +107,13 @@ def load_data() -> pd.DataFrame:
     return df
 
 
+
 def save_data(df: pd.DataFrame) -> None:
     df2 = df.copy()
     for c in ["created_at_iso","ready_until_iso","completed_at_iso"]:
         if c in df2.columns:
-            df2[c] = pd.to_datetime(df2[c], errors="coerce").dt.tz_localize(None)
+            # Handle mixed tz-aware/naive safely
+            df2[c] = pd.to_datetime(df2[c], errors="coerce", utc=True).dt.tz_convert(None)
     df2.to_csv(DATA_FILE, index=False)
     load_data.clear()
 
@@ -184,8 +186,8 @@ def home_page():
     st.markdown(
         """
         <div class="hero">
-          <h1>🍱 Food Rescue @ Campus</h1>
-          <p>Quick tools to <b>rescue surplus food</b> and <b>measure impact</b> on campus.</p>
+          <h1>🍱 Feed Forward</h1>
+          <h3>we don't just feed mouths! we fuel futures</h3>
         </div>
         """,
         unsafe_allow_html=True,

@@ -1,3 +1,5 @@
 id,created_at_iso,donor_name,donor_phone,food_desc,qty_meals,veg_type,allergens,address,ready_until_iso,ready_until_hhmm,status,claimer_name,claimer_phone,donor_code,volunteer_code,completed_at_iso
-20250824114159527,2025-08-24 11:41:59.639345+05:30,qwertyuiop,1234567890,"vegbiryani,curd",10,Veg,gluten,kiit campus 3,2025-08-24 12:30:00+05:30,12:30,expired,,,268,,
-20250824131653861,2025-08-24T13:16:53.568614+05:30,"k,jk.ui",5468579698,biryani,10,Veg,,kiit campus 3,2025-08-24T21:00:00+05:30,21:00,open,,,2848,,
+20250824114159527,2025-08-24 06:11:59.639345,qwertyuiop,1234567890,"vegbiryani,curd",10,Veg,gluten,kiit campus 3,2025-08-24 07:00:00.000000,12:30,expired,,,268,,
+20250824131653861,,"k,jk.ui",5468579698,biryani,10,Veg,,kiit campus 3,,21:00,open,,,2848,,
+20250824145827998,2025-08-24 09:28:27.059084,qwertyuiop,5468579698,biriryani,10,Veg,,kiit campus 3,2025-08-24 14:59:35.728758,21:00,expired,,,1085,,
+20250824150132810,2025-08-24 09:31:32.325512,Pratyush Ranjan Mishra,9556853351,dahi,10,Veg,,kiit campus 3,2025-08-24 15:30:00.000000,21:00,claimed,Ayush,1234567890,7138,2362,
