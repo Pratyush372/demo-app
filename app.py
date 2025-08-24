@@ -10,7 +10,6 @@ from datetime import datetime, date, time as dtime
 import random
 import string
 from dateutil import tz
-import textwrap
 
 # ---------- App Meta ----------
 APP_TITLE = "🍱 Food Rescue @ Campus"
@@ -24,47 +23,147 @@ STATUS_EXPIRED = "expired"
 # ---------- One-time page config ----------
 st.set_page_config(page_title="Food Rescue @ Campus", page_icon="🍱", layout="wide")
 
-# ---------- Visual theme (CSS overrides for Streamlit chrome only) ----------
-# Goal: full-bleed, hide scrollbar (but KEEP scrolling), add right margin, avoid 100vw overflow
-st.markdown(
-    """
+# ---------- Visual theme (CSS overrides) ----------
+st.markdown("""
 <style>
-  /* Full-bleed Streamlit area */
-  html, body, [data-testid="stAppViewContainer"], .main, .block-container {
-    margin: 0 !important;
-    padding: 0 !important;
+  /* --- App background --- */
+#   .stApp {
+#     background: linear-gradient(rgba(10,12,20,.35), rgba(10,12,20,.55)),
+#                 url('bg.jpg') no-repeat center center fixed;
+#     background-size: cover;
+#   }
+#   .block-container { padding-top: 1.2rem; max-width: 1200px; }
+
+            /* Container */
+    body {
+      background: #0f172a;
+      background-image: url("bg.jpg");
+      background-repeat: no-repeat;
+      background-size: cover;
+      font-family: Arial, sans-serif;
+      color: white;
+      margin: 0;
+      /* padding: 20px; */
+    }
+  /* --- HERO --- */
+  .hero {
+    padding:32px;
+    margin-bottom:22px;
+    text-align: center;
+    color: #fff;
+    background: rgba(16,15,15,.35);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 22px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 20px 50px rgba(0,0,0,.35);
   }
-  .main .block-container {
-    max-width: 100% !important;   /* no central column */
-    padding-right: 20px !important; /* right margin space request */
+  .hero h1 {
+    margin: 0 0 .25rem 0;
+    font-family: "Ubuntu", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    font-weight: 800;
+    font-size: clamp(2.4rem, 5vw, 3.4rem);
+    letter-spacing: .3px;
+    text-transform: uppercase;
+  }
+  .hero p {
+    margin: 0;
+    color: #e2e8f0;
+    font-style: italic;
+    font-family: "Rubik", sans-serif;
   }
 
-  /* Optional: remove default header spacing */
-  header[data-testid="stHeader"] { height: 0; visibility: hidden; }
-
-  /* Keep page scrollable, but hide the scrollbar (both WebKit + Firefox) */
-  html, body {
-    height: 100%;
-    overflow-y: auto;       /* allow scroll */
-    overflow-x: hidden;     /* no horizontal overflow */
+  /* --- card grid (centered) --- */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+    margin: 22px auto 34px;
+    max-width: 980px;
   }
-  /* WebKit: hide track/scrollbar while keeping scroll functionality */
-  ::-webkit-scrollbar { width: 0px; height: 0px; background: transparent; }
-  /* Firefox */
-  * { scrollbar-width: none; }
+  @media (max-width: 1024px){ .card-grid { grid-template-columns: repeat(3, 1fr); max-width: 100%; } }
+  @media (max-width: 900px) { .card-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 640px) { .card-grid { grid-template-columns: 1fr; } }
 
-  /* Utility rules you already used */
-  .stTabs [data-baseweb="tab-list"] { gap: 8px; }
-  .stTabs [data-baseweb="tab"] { padding: 10px 14px; border-radius: 12px; background:#0b1220; border:1px solid #1f2937; }
-  .codebox { background:#0b1220; border:1px dashed #334155; padding:.75rem; border-radius:10px; }
-  .stButton>button[kind="primary"]{
+  /* --- glass cards to match screenshot --- */
+  .card {
+    background: rgba(0,0,0,.55);
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 24px;
+    padding: 22px 22px 24px;
+    color: #fff;
+    text-align: center;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 18px 40px rgba(0,0,0,.35);
+  }
+  .card h3 {
+    margin: 0 0 6px 0;
+    font-size: 1.2rem;
+    font-weight: 800;
+  }
+  .card p {
+    margin: 0 0 12px 0;
+    color: #cbd5e1;
+    font-size: .98rem;
+  }
+
+  /* --- primary button --- */
+  .stButton>button[kind="primary"] {
     background: linear-gradient(135deg,#fb7185,#ef4444);
-    border: none; color: white; font-weight: 700; border-radius: 12px; padding:.6rem 1rem;
+    border: none; color: white; font-weight: 800;
+    border-radius: 14px; padding:.7rem 1.25rem;
+    box-shadow: 0 10px 24px rgba(239,68,68,.35);
   }
+  .btn-dis{
+    display:inline-block; margin-top:12px;
+    background: linear-gradient(135deg,#fb7185,#ef4444);
+    border:none; color:white; font-weight:800;
+    border-radius:14px; padding:.7rem 1.25rem; opacity:.75; cursor:not-allowed;
+    box-shadow: 0 10px 24px rgba(239,68,68,.35);
+  }
+
+  /* --- dashboard chips (unchanged) --- */
+  .chip-metric{
+    background:rgba(0,0,0,.55);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:14px; padding:12px 14px;
+    display:flex;flex-direction:column;gap:6px;height:100%;
+    backdrop-filter: blur(6px);
+  }
+  .chip-label{color:#94a3b8;font-size:.85rem}
+  .chip-value{font-size:1.4rem;font-weight:800}
+
+  /* --- tabs + code box --- */
+  .stTabs [data-baseweb="tab-list"] { gap: 8px; }
+  .stTabs [data-baseweb="tab"] { padding: 10px 14px; border-radius: 12px;
+    background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.08); }
+  .codebox { background:rgba(0,0,0,.55); border:1px dashed #334155; padding:.75rem; border-radius:10px; }
+
+  /* --- footer panel (glass) --- */
+  .footer {
+    border-top: 2px groove #fb7185;
+    color: #e0e0e0;
+    padding: 1.5rem 1rem;
+    width: 80%;
+    margin: 0 auto 18px;
+    background: rgba(0,0,0,.55);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 18px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 18px 40px rgba(0,0,0,.35);
+  }
+  .footer-links {
+    display: flex; justify-content: space-around; flex-wrap: wrap; gap: 24px;
+    margin: 0 auto 1rem; padding: 0 12px; text-align: left; max-width: 1000px;
+  }
+  .footer-links h4 { margin: 0 0 1rem 0; font-size: 1.1rem; color:#eca4af; }
+  .footer-links ul { list-style: none; padding: 0; margin: 0; }
+  .footer-links li { margin-bottom: 0.5rem; font-size: 0.95rem; color: #caa8a8; }
+  .footer-links li:hover { color: #f0c1d2; }
+  .social-media { display:flex; justify-content:center; gap:22px; margin-bottom:8px; }
+  .social-media img { width:24px; height:auto; }
 </style>
-""",
-    unsafe_allow_html=True,
-)
+""", unsafe_allow_html=True)
+
 
 # ---------- Helpers ----------
 def _ensure_data_file() -> None:
@@ -84,16 +183,18 @@ def load_data() -> pd.DataFrame:
     if df.empty:
         return df
 
-    # Parse datetimes robustly: accept mixed tz, then drop tz → NAIVE
+    # Parse to LOCAL TIME (naive) so comparisons use the same basis as datetime.now()
     for c in ["created_at_iso","ready_until_iso","completed_at_iso"]:
         if c in df.columns:
-            df[c] = pd.to_datetime(df[c], errors="coerce", utc=True).dt.tz_convert(None)
+            s = pd.to_datetime(df[c], errors="coerce", utc=True)
+            s = s.dt.tz_convert(tz.tzlocal()).dt.tz_localize(None)
+            df[c] = s
 
     if "qty_meals" in df.columns:
         df["qty_meals"] = pd.to_numeric(df["qty_meals"], errors="coerce").fillna(0).astype(int)
 
-    # Use NAIVE 'now' for comparisons
-    now = datetime.now()
+    now = datetime.now()  # local, naive
+
     def _expire_row(row):
         ru = row.get("ready_until_iso")
         if pd.isna(ru):
@@ -109,7 +210,9 @@ def save_data(df: pd.DataFrame) -> None:
     df2 = df.copy()
     for c in ["created_at_iso","ready_until_iso","completed_at_iso"]:
         if c in df2.columns:
-            df2[c] = pd.to_datetime(df2[c], errors="coerce", utc=True).dt.tz_convert(None)
+            s = pd.to_datetime(df2[c], errors="coerce", utc=True)
+            s = s.dt.tz_convert(tz.tzlocal()).dt.tz_localize(None)
+            df2[c] = s
     df2.to_csv(DATA_FILE, index=False)
     load_data.clear()
 
@@ -120,9 +223,12 @@ def new_id() -> str:
     return datetime.now().strftime("%Y%m%d%H%M%S") + "".join(random.choices(string.digits, k=3))
 
 def local_iso(dt_obj: datetime) -> str:
+    # Store as LOCAL TZ AWARE ISO string for audit;
+    # we'll parse back to local-naive in load/save.
     return dt_obj.astimezone(tz=tz.tzlocal()).isoformat()
 
 def build_ready_until(today: date, hhmm: dtime) -> datetime:
+    # returns timezone-aware datetime (local tz)
     naive = datetime.combine(today, hhmm)
     return naive.replace(tzinfo=tz.tzlocal())
 
@@ -174,212 +280,89 @@ def nav_header() -> str:
         st.caption("Demo build • Lightweight pseudo-login")
         return page
 
-# ---------- Your static HTML landing (rendered on Home) ----------
-HOME_HTML = textwrap.dedent(r"""
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" 
-    integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" 
-    referrerpolicy="no-referrer" />
-
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Ubuntu:wght@400;700&family=Rubik:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
-
-  <title>FEED FORWARD</title>
-  <style>
-    /* Page base — avoid 100vw overflow that causes right slider */
-    html, body {
-      background: #0f172a;
-      background-image: url("https://share.google/images/ajiwJn0fTlfNRUrFf");
-      background-repeat: no-repeat;
-      background-size: cover;
-      color: white;
-      margin: 0;
-      padding: 0;
-      width: 100%;        /* NOT 100vw */
-      min-height: auto !important;
-      height: auto !important;                     
-      overflow-x: hidden; /* no sideways scroll */
-      font-family: Inter, system-ui, -apple-system, Arial, sans-serif;
-    }
-
-    /* Container */
-    .container {
-      width: 100%;
-      max-width: 100%;       /* true full-bleed */
-      margin: 0;
-      padding: 0 24px;       /* symmetric padding; Streamlit gives extra right padding too */
-      box-sizing: border-box;
-    }
-
-    /* Hero Section */
-    .hero {
-      background-color: rgba(16, 15, 15, 0.35);
-      border-radius: 22px;
-      padding: 32px;
-      margin: 16px 0 22px 0;
-      box-shadow: 0 10px 30px rgba(0,0,0,.25);
-      text-align: center;
-    }
-    .hero h1 { font-size: 3rem; margin-bottom: 10px; font-family: "Ubuntu", Inter, sans-serif; }
-    .hero p { color:#cbd5e1; font-size:1.05rem; font-family: "Rubik", Inter, sans-serif; font-style: italic; }
-
-    /* Grid layout */
-    .grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 30px;
-      margin: 0 0 85px 0;
-    }
-
-    /* Feature Cards */
-    .card {
-      flex: 1 1 260px;
-      background: rgba(3, 3, 3, 0.78);
-      border:1px solid #1f2937;
-      border-radius: 18px;
-      padding: 18px;
-      box-shadow: 0 10px 24px rgba(2,6,23,.3);
-      text-align: center;
-      color: #ffffff;
-    }
-    .card h3 { margin: 0 0 6px 0; font-size: 1.25rem; }
-    .card p { font-size:.95rem; color:#94a3b8; min-height: 2.5em; }
-
-    /* Buttons */
-    .btn, .btn-dis {
-      display: inline-block;
-      margin-top: 12px;
-      background: linear-gradient(135deg,#fb7185,#ef4444);
-      border: none;
-      color: white;
-      font-weight: 700;
-      border-radius: 12px;
-      padding:.6rem 1.2rem;
-      transition: transform .15s ease;
-      cursor: pointer;
-      text-decoration: none;
-    }
-    .btn:hover { transform: scale(1.05); }
-    .btn-dis { opacity: .85; cursor: default; }
-
-    footer.footer {
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
-    }                       
-
-    /*  Footer */
-    .footer {
-      border-top:2px groove #fb7185;
-      color: #e0e0e0;
-      width: 100%;
-      margin: 0;
-      padding: 1rem 1rem;
-      box-sizing: border-box;
-      position: relative;
-      background: rgba(3, 3, 3, 0.78);
-      z-index: 1;
-    }
-    .footer::before { content: ""; position: absolute; inset: 0; z-index: -1; }
-
-    /* Footer link sections */
-    .footer-links {
-      display: flex;
-      justify-content: space-around;
-      flex-wrap: wrap;
-      gap: 24px;
-      margin-bottom: 2rem;
-      text-align: left;
-    }
-    .footer-links h4 { margin-bottom: 1rem; font-size: 1.1rem; color:#eca4af; }
-    .footer-links ul { list-style: none; padding: 0; margin: 0; }
-    .footer-links li { margin-bottom: 0.5rem; font-size: 0.95rem; color: #caa8a8; cursor: pointer; }
-    .footer-links li:hover { text-decoration: none; color: #caa8a8; transform: scale(0.98); }
-
-    /* Social media */
-    .social-media{ display: flex; justify-content: center; gap:30px; }
-    .social-media img{ height:auto; width:25px; }
-    .social-media img.insta:hover { animation: pulse-insta 1.2s ease-in-out infinite; transform: scale(1.2); }
-    @keyframes pulse-insta{ 0%, 100% { box-shadow: 0 0 5px rgba(193, 53, 132, 0.6); } 50% { box-shadow: 0 0 20px rgba(193, 53, 132, 0.9); } }
-    .social-media img.twitter:hover { animation: pulse-twitter 1.2s ease-in-out infinite; transform: scale(1.2); }
-    @keyframes pulse-twitter { 0%, 100% { box-shadow: 0 0 5px rgba(29, 161, 242, 0.6); } 50% { box-shadow: 0 0 20px rgba(29, 161, 242, 0.9); } }
-    .social-media img.youtube:hover { animation: pulse-youtube 1.2s ease-in-out infinite; transform: scale(1.2); }
-    @keyframes pulse-youtube { 0%, 100% { box-shadow: 0 0 5px rgba(255, 0, 0, 0.6); } 50% { box-shadow: 0 0 20px rgba(255, 0, 0, 0.9); } }
-    .footer p { text-align: center; font-size: 0.9rem; color: #938b91; }
-  </style>
-</head>
-<body>
-<div class="container">
-  <!-- Hero -->
-  <div class="hero">
-    <h1>FEED Forward</h1>
-    <p>"We don't just feed mouths! we fuel futures!"</p>
-  </div>
-
-  <!-- Feature Cards -->
-  <div class="grid">
-    <div class="card">
-      <h3>🍴 Food Rescue</h3>
-      <p>Donate & claim leftover meals on campus.</p>
-      <!-- Deep-link into Streamlit app -->
-      <a href="?go=food" class="btn">Open Food Rescue</a>
-    </div>
-    <div class="card">
-      <h3>🛒 Smart Ration Planner</h3>
-      <p>Plan healthy groceries within a budget. (concept)</p>
-      <span class="btn-dis">Coming Soon</span>
-    </div>
-    <div class="card">
-      <h3>🗺️ Meal Map</h3>
-      <p>Find free/low-cost meals nearby. (concept)</p>
-      <span class="btn-dis">Coming Soon</span>
-    </div>
-  </div>
-
-  <footer class="footer">
-    <div class="footer-links">
-      <div>
-        <h4>Explore</h4>
-        <ul>
-          <li>Donate</li>
-          <li>Explorer</li>
-          <li>Food Planner</li>
-        </ul>
-      </div>
-      <div>
-        <h4>Company</h4>
-        <ul>
-          <li>About Us</li>
-          <li>How It Works</li>
-          <li>Community</li>
-        </ul>
-      </div>
-      <div>
-        <h4>Account</h4>
-        <ul>
-          <li>Login/Register</li>
-          <li>Dashboard</li>
-          <li>Notifications</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="social-media">
-      <span><img src="instagram.png" alt="Instagram" class="insta"></span>
-      <span><img src="twitter.png" alt="Twitter" class="twitter"></span>
-      <span><img src="youtube.png" alt="YouTube" class="youtube"></span>
-    </div>
-    <center><p>© 2025 FeedForward. All rights reserved.</p></center>
-  </footer>
-</div>
-</body>
-</html>
-""").strip()
-
 # ---------- Pages ----------
+def home_page():
+    # HERO (big title + quote)
+    st.markdown(
+        """
+        <div class="hero">
+          <h1>FEED Forward</h1>
+          <p>"We don't just feed mouths! we fuel futures!"</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # CENTERED GLASS CARDS (match screenshot)
+    st.markdown('<div class="card-grid">', unsafe_allow_html=True)
+
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.markdown("### 🍽️&nbsp;&nbsp;Food Rescue", unsafe_allow_html=True)
+        st.markdown("<p>Donate & claim leftover meals on campus.</p>", unsafe_allow_html=True)
+        st.button("Open Food Rescue", key="open_food_rescue_btn_home", on_click=lambda: _goto("Food Rescue"), type="primary")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    with c2:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.markdown("### 🛒&nbsp;&nbsp;Smart Ration Planner", unsafe_allow_html=True)
+        st.markdown("<p>Plan healthy groceries within a budget. (concept)</p>", unsafe_allow_html=True)
+        st.markdown('<span class="btn-dis" aria-disabled="true">Coming Soon</span>', unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    with c3:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.markdown("### 🗺️&nbsp;&nbsp;Meal Map", unsafe_allow_html=True)
+        st.markdown("<p>Find free/low-cost meals nearby. (concept)</p>", unsafe_allow_html=True)
+        st.markdown('<span class="btn-dis" aria-disabled="true">Coming Soon</span>', unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # GLASS FOOTER (like screenshot)
+    st.markdown(
+        """
+        <footer class="footer">
+          <div class="footer-links">
+            <div>
+              <h4>Explore</h4>
+              <ul>
+                <li>Donate</li>
+                <li>Explorer</li>
+                <li>Food Planner</li>
+              </ul>
+            </div>
+            <div>
+              <h4>Company</h4>
+              <ul>
+                <li>About Us</li>
+                <li>How It Works</li>
+                <li>Community</li>
+              </ul>
+            </div>
+            <div>
+              <h4>Account</h4>
+              <ul>
+                <li>Login/Register</li>
+                <li>Dashboard</li>
+                <li>Notifications</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="social-media" aria-label="Social media">
+            <a href="#" aria-label="Instagram"><img src="instagram.png" alt="Instagram" /></a>
+            <a href="#" aria-label="Twitter"><img src="twitter.png" alt="Twitter/X" /></a>
+            <a href="#" aria-label="YouTube"><img src="youtube.png" alt="YouTube" /></a>
+          </div>
+
+          <p style="text-align:center;margin:0;">© 2025 FeedForward. All rights reserved.</p>
+        </footer>
+        """,
+        unsafe_allow_html=True
+    )
+
 def _goto(name:str):
     st.session_state["_nav_target"] = name
     st.rerun()
@@ -461,6 +444,7 @@ def _update_status(post_id: str, required_status: str, new_status: str, allow_an
     df.loc[mask, "status"] = new_status
     if new_status == STATUS_EXPIRED:
         df.loc[mask, "ready_until_iso"] = datetime.now()
+
     save_data(df)
     st.success(f"Post {post_id} updated → {new_status}.")
 
@@ -493,7 +477,12 @@ def donor_my_posts_page():
 
     def status_badge(s: str) -> str:
         s = (s or "").lower()
-        return {"open":"🟢 Open","claimed":"🔵 Claimed","completed":"✅ Completed","expired":"🔴 Expired"}.get(s, s)
+        return {
+            "open": "🟢 Open",
+            "claimed": "🔵 Claimed",
+            "completed": "✅ Completed",
+            "expired": "🔴 Expired",
+        }.get(s, s)
 
     mine2 = mine.copy()
     mine2["Status"] = mine2["status"].map(status_badge)
@@ -504,7 +493,10 @@ def donor_my_posts_page():
     })[["Post ID","Food","Meals","Type","Until","Status","Claimer","Claimer phone","Pickup code"]]
 
     st.data_editor(
-        mine2, hide_index=True, use_container_width=True, disabled=True,
+        mine2,
+        hide_index=True,
+        use_container_width=True,
+        disabled=True,
         column_config={
             "Meals": st.column_config.NumberColumn(format="%d", width="small"),
             "Type": st.column_config.TextColumn(width="small"),
@@ -555,6 +547,7 @@ def volunteer_find_claim_page():
             min_meals = st.number_input("Min meals", min_value=0, value=0, step=1, key="v_min_meals")
 
     now = datetime.now()
+
     if veg_filter != "All":
         open_df = open_df[open_df["veg_type"] == veg_filter]
     if only_open_now:
@@ -574,7 +567,9 @@ def volunteer_find_claim_page():
     })[["Post ID","Donor","Food","Meals","Type","Address","Until","Phone"]]
 
     st.data_editor(
-        df_display, hide_index=True, use_container_width=True,
+        df_display,
+        hide_index=True,
+        use_container_width=True,
         column_config={
             "Meals": st.column_config.NumberColumn(format="%d", step=1, width="small"),
             "Type": st.column_config.TextColumn(width="small"),
@@ -632,7 +627,10 @@ def volunteer_my_claims_page():
     })[["Post ID","Donor","Food","Meals","Type","Address","Until","Status","Phone","Your code"]]
 
     st.data_editor(
-        mine2, hide_index=True, use_container_width=True, disabled=True,
+        mine2,
+        hide_index=True,
+        use_container_width=True,
+        disabled=True,
         column_config={
             "Meals": st.column_config.NumberColumn(format="%d", width="small"),
             "Type": st.column_config.TextColumn(width="small"),
@@ -676,9 +674,9 @@ def dashboard_page():
         with col:
             st.markdown(
                 f"""
-                <div class="codebox" style="border-style:solid;border-radius:14px">
-                  <div style="color:#94a3b8;font-size:.85rem">{label}</div>
-                  <div style="font-size:1.4rem;font-weight:800">{value}</div>
+                <div class="chip-metric">
+                  <div class="chip-label">{label}</div>
+                  <div class="chip-value">{value}</div>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -725,133 +723,6 @@ def dashboard_page():
     else:
         st.info("No data yet. Post and claim to see impact.")
 
-def food_rescue_simple_page():
-    st.subheader("Food Rescue – Quick Actions")
-    tab_donor, tab_receiver = st.tabs(["🍱 Donor Box", "🤝 Receiver Box"])
-
-    with tab_donor:
-        st.markdown("Post surplus food so receivers can claim it.")
-        with st.form("donor_box_form", clear_on_submit=True):
-            veg_type = st.selectbox("What type of food?", ["Veg","Non-veg","Mixed"])
-            food_desc = st.text_area("Food details", placeholder="e.g., Veg biryani + curd, 10 plates")
-            qty = st.number_input("Quantity (meals)", min_value=1, max_value=2000, value=10, step=1)
-            address = st.text_input("Pickup location/address")
-            donor_name = st.text_input("Your name / canteen")
-            donor_phone = st.text_input("Contact phone (digits only)")
-            until_time = st.time_input("Available until (today)", value=dtime(21, 0))
-            notes = st.text_input("Other details (optional)")
-            submit_post = st.form_submit_button("Post surplus")
-
-        if submit_post:
-            if not (food_desc.strip() and address.strip() and donor_name.strip() and donor_phone.strip()):
-                st.error("Please fill food details, address, name and phone.")
-            elif not validate_phone(donor_phone):
-                st.error("Phone must be digits, 7–13 characters.")
-            else:
-                ready_until = build_ready_until(date.today(), until_time)
-                df = load_data()
-                post = {
-                    "id": new_id(),
-                    "created_at_iso": local_iso(datetime.now()),
-                    "donor_name": donor_name.strip(),
-                    "donor_phone": donor_phone.strip(),
-                    "food_desc": food_desc.strip(),
-                    "qty_meals": int(qty),
-                    "veg_type": veg_type,
-                    "allergens": notes.strip(),
-                    "address": address.strip(),
-                    "ready_until_iso": local_iso(ready_until),
-                    "ready_until_hhmm": until_time.strftime("%H:%M"),
-                    "status": STATUS_OPEN,
-                    "claimer_name": "",
-                    "claimer_phone": "",
-                    "donor_code": gen_code(),
-                    "volunteer_code": "",
-                    "completed_at_iso": pd.NaT
-                }
-                df = pd.concat([df, pd.DataFrame([post])], ignore_index=True)
-                save_data(df)
-                st.success("Posted! Share this code with the receiver during pickup:")
-                st.markdown(f"<div class='codebox'><code>{post['donor_code']}</code></div>", unsafe_allow_html=True)
-
-        st.markdown("**Recent posts by you (filter by phone):**")
-        phone_filter = st.text_input("Your phone", key="donor_phone_filter")
-        dfv = load_data()
-        if phone_filter.strip():
-            dfv = dfv[dfv["donor_phone"] == phone_filter.strip()]
-        cols = ["id","food_desc","qty_meals","veg_type","ready_until_hhmm","status","claimer_name","donor_code"]
-        if not dfv.empty:
-            st.dataframe(dfv[cols].sort_values("id", ascending=False), use_container_width=True, hide_index=True)
-        else:
-            st.caption("No matching posts yet.")
-
-    with tab_receiver:
-        st.markdown("Find open posts and claim them.")
-        df = load_data()
-        open_df = df[df["status"] == STATUS_OPEN].copy()
-
-        colf1, colf2 = st.columns(2)
-        with colf1:
-            veg_filter = st.selectbox("Filter by type", ["All","Veg","Non-veg","Mixed"], key="rx_veg")
-        with colf2:
-            only_open_now = st.checkbox("Only within time window", value=True, key="rx_open_now")
-
-        now = datetime.now()
-        if veg_filter != "All":
-            open_df = open_df[open_df["veg_type"] == veg_filter]
-        if only_open_now:
-            open_df = open_df[pd.to_datetime(open_df["ready_until_iso"], errors="coerce") > now]
-
-        show_cols = ["id","donor_name","food_desc","qty_meals","veg_type","address","ready_until_hhmm","donor_phone"]
-        if not open_df.empty:
-            st.dataframe(open_df[show_cols].sort_values("id", ascending=False), use_container_width=True, hide_index=True)
-        else:
-            st.info("No open posts right now.")
-
-        st.markdown("### Claim a post")
-        with st.form("receiver_claim_form"):
-            post_id = st.text_input("Post ID to claim")
-            your_name = st.text_input("Your name / organization")
-            your_phone = st.text_input("Your phone (digits only)")
-            do_claim = st.form_submit_button("Claim")
-        if do_claim:
-            df2 = load_data()
-            if not (post_id.strip() and your_name.strip() and your_phone.strip()):
-                st.error("Enter Post ID, your name and phone.")
-            elif not validate_phone(your_phone):
-                st.error("Phone must be digits, 7–13 characters.")
-            elif not (df2["id"] == post_id).any():
-                st.error("Invalid Post ID.")
-            else:
-                row = df2[df2["id"] == post_id].iloc[0]
-                if row["status"] != STATUS_OPEN:
-                    st.error(f"Post is '{row['status']}'. Choose another.")
-                else:
-                    vcode = gen_code()
-                    df2.loc[df2["id"] == post_id, ["status","claimer_name","claimer_phone","volunteer_code"]] = \
-                        [STATUS_CLAIMED, your_name.strip(), your_phone.strip(), vcode]
-                    save_data(df2)
-                    st.success("Claimed! Show this code to the donor at pickup:")
-                    st.markdown(f"<div class='codebox'><code>{vcode}</code></div>", unsafe_allow_html=True)
-
-        st.markdown("### Complete pickup")
-        with st.form("receiver_complete_form"):
-            c_post_id = st.text_input("Post ID", key="rx_complete_pid")
-            donor_code = st.text_input("Donor's pickup code", key="rx_complete_code")
-            do_complete = st.form_submit_button("Mark Completed")
-        if do_complete:
-            if not c_post_id.strip() or not donor_code.strip():
-                st.error("Enter both Post ID and donor code.")
-            else:
-                _complete_post(c_post_id, donor_code, actor="volunteer")
-
-# ---------- Main router ----------
-def home_page():
-    # Render the HTML landing page inside Streamlit
-    import streamlit.components.v1 as components
-    # Make the iframe tall and avoid iframe scrolling to prevent nested scrollbars
-    components.html(HOME_HTML, height=760, scrolling=False)
-
 def food_rescue_router():
     require_session()
     if not st.session_state.role:
@@ -878,6 +749,7 @@ def food_rescue_router():
 
     st.button("Switch Role", on_click=_reset_role)
 
+# ---------- Main router ----------
 def main():
     page = nav_header()
     st.title(APP_TITLE)
