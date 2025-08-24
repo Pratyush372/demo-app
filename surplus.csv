@@ -1,0 +1,2 @@
+id,created_at_iso,donor_name,donor_phone,food_desc,qty_meals,veg_type,allergens,address,ready_until_iso,ready_until_hhmm,status,claimer_name,claimer_phone,donor_code,volunteer_code,completed_at_iso
+20250824114159527,2025-08-24T11:41:59.639345+05:30,qwertyuiop,1234567890,"vegbiryani,curd",10,Veg,gluten,kiit campus 3,2025-08-24T12:30:00+05:30,12:30,open,,,0268,,
