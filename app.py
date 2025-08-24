@@ -10,6 +10,7 @@ from datetime import datetime, date, time as dtime
 import random
 import string
 from dateutil import tz
+import textwrap
 
 # ---------- App Meta ----------
 APP_TITLE = "🍱 Food Rescue @ Campus"
@@ -23,49 +24,47 @@ STATUS_EXPIRED = "expired"
 # ---------- One-time page config ----------
 st.set_page_config(page_title="Food Rescue @ Campus", page_icon="🍱", layout="wide")
 
-# ---------- Visual theme (CSS overrides) ----------
-st.markdown("""
+# ---------- Visual theme (CSS overrides for Streamlit chrome only) ----------
+# Goal: full-bleed, hide scrollbar (but KEEP scrolling), add right margin, avoid 100vw overflow
+st.markdown(
+    """
 <style>
-  /* Page padding + max width */
-  .block-container { padding-top: 1.2rem; max-width: 1200px; }
-
-  /* Hero */
-  .hero {
-    background: radial-gradient(1200px 400px at 10% -10%, #1e293b 0%, #0b1220 55%);
-    border: 1px solid #1f2937; border-radius: 22px; padding: 28px 28px; margin-bottom: 16px;
-    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  /* Full-bleed Streamlit area */
+  html, body, [data-testid="stAppViewContainer"], .main, .block-container {
+    margin: 0 !important;
+    padding: 0 !important;
   }
-  .hero h1 { margin: 0; letter-spacing: .5px; font-size: 2.1rem; }
-  .hero p { color:#cbd5e1; margin:.2rem 0 0 0; }
-
-  /* Feature cards */
-  .card {
-    background: #0b1220; border:1px solid #1f2937; border-radius: 18px; padding: 16px 16px 18px;
-    box-shadow: 0 10px 24px rgba(2,6,23,.3);
+  .main .block-container {
+    max-width: 100% !important;   /* no central column */
+    padding-right: 20px !important; /* right margin space request */
   }
-  .card h3 { margin: 0 0 6px 0; }
-  .muted { color:#94a3b8; }
 
-  /* Primary button look */
+  /* Optional: remove default header spacing */
+  header[data-testid="stHeader"] { height: 0; visibility: hidden; }
+
+  /* Keep page scrollable, but hide the scrollbar (both WebKit + Firefox) */
+  html, body {
+    height: 100%;
+    overflow-y: auto;       /* allow scroll */
+    overflow-x: hidden;     /* no horizontal overflow */
+  }
+  /* WebKit: hide track/scrollbar while keeping scroll functionality */
+  ::-webkit-scrollbar { width: 0px; height: 0px; background: transparent; }
+  /* Firefox */
+  * { scrollbar-width: none; }
+
+  /* Utility rules you already used */
+  .stTabs [data-baseweb="tab-list"] { gap: 8px; }
+  .stTabs [data-baseweb="tab"] { padding: 10px 14px; border-radius: 12px; background:#0b1220; border:1px solid #1f2937; }
+  .codebox { background:#0b1220; border:1px dashed #334155; padding:.75rem; border-radius:10px; }
   .stButton>button[kind="primary"]{
     background: linear-gradient(135deg,#fb7185,#ef4444);
     border: none; color: white; font-weight: 700; border-radius: 12px; padding:.6rem 1rem;
   }
-
-  /* Chip-like metrics */
-  .chip-metric{
-    background:#0b1220;border:1px solid #1f2937;border-radius:14px;padding:12px 14px;
-    display:flex;flex-direction:column;gap:6px;height:100%;
-  }
-  .chip-label{color:#94a3b8;font-size:.85rem}
-  .chip-value{font-size:1.4rem;font-weight:800}
-
-  /* Utility bits from your previous CSS */
-  .stTabs [data-baseweb="tab-list"] { gap: 8px; }
-  .stTabs [data-baseweb="tab"] { padding: 10px 14px; border-radius: 12px; background:#0b1220; border:1px solid #1f2937; }
-  .codebox { background:#0b1220; border:1px dashed #334155; padding:.75rem; border-radius:10px; }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # ---------- Helpers ----------
 def _ensure_data_file() -> None:
@@ -106,17 +105,13 @@ def load_data() -> pd.DataFrame:
     df["status"] = df.apply(_expire_row, axis=1)
     return df
 
-
-
 def save_data(df: pd.DataFrame) -> None:
     df2 = df.copy()
     for c in ["created_at_iso","ready_until_iso","completed_at_iso"]:
         if c in df2.columns:
-            # Handle mixed tz-aware/naive safely
             df2[c] = pd.to_datetime(df2[c], errors="coerce", utc=True).dt.tz_convert(None)
     df2.to_csv(DATA_FILE, index=False)
     load_data.clear()
-
 
 def gen_code(n:int=4) -> str:
     return "".join(random.choices(string.digits, k=n))
@@ -128,7 +123,6 @@ def local_iso(dt_obj: datetime) -> str:
     return dt_obj.astimezone(tz=tz.tzlocal()).isoformat()
 
 def build_ready_until(today: date, hhmm: dtime) -> datetime:
-    # returns timezone-aware datetime (local tz)
     naive = datetime.combine(today, hhmm)
     return naive.replace(tzinfo=tz.tzlocal())
 
@@ -180,42 +174,212 @@ def nav_header() -> str:
         st.caption("Demo build • Lightweight pseudo-login")
         return page
 
+# ---------- Your static HTML landing (rendered on Home) ----------
+HOME_HTML = textwrap.dedent(r"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" 
+    integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" 
+    referrerpolicy="no-referrer" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Ubuntu:wght@400;700&family=Rubik:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
+
+  <title>FEED FORWARD</title>
+  <style>
+    /* Page base — avoid 100vw overflow that causes right slider */
+    html, body {
+      background: #0f172a;
+      background-image: url("https://share.google/images/ajiwJn0fTlfNRUrFf");
+      background-repeat: no-repeat;
+      background-size: cover;
+      color: white;
+      margin: 0;
+      padding: 0;
+      width: 100%;        /* NOT 100vw */
+      min-height: auto !important;
+      height: auto !important;                     
+      overflow-x: hidden; /* no sideways scroll */
+      font-family: Inter, system-ui, -apple-system, Arial, sans-serif;
+    }
+
+    /* Container */
+    .container {
+      width: 100%;
+      max-width: 100%;       /* true full-bleed */
+      margin: 0;
+      padding: 0 24px;       /* symmetric padding; Streamlit gives extra right padding too */
+      box-sizing: border-box;
+    }
+
+    /* Hero Section */
+    .hero {
+      background-color: rgba(16, 15, 15, 0.35);
+      border-radius: 22px;
+      padding: 32px;
+      margin: 16px 0 22px 0;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      text-align: center;
+    }
+    .hero h1 { font-size: 3rem; margin-bottom: 10px; font-family: "Ubuntu", Inter, sans-serif; }
+    .hero p { color:#cbd5e1; font-size:1.05rem; font-family: "Rubik", Inter, sans-serif; font-style: italic; }
+
+    /* Grid layout */
+    .grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      margin: 0 0 85px 0;
+    }
+
+    /* Feature Cards */
+    .card {
+      flex: 1 1 260px;
+      background: rgba(3, 3, 3, 0.78);
+      border:1px solid #1f2937;
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 10px 24px rgba(2,6,23,.3);
+      text-align: center;
+      color: #ffffff;
+    }
+    .card h3 { margin: 0 0 6px 0; font-size: 1.25rem; }
+    .card p { font-size:.95rem; color:#94a3b8; min-height: 2.5em; }
+
+    /* Buttons */
+    .btn, .btn-dis {
+      display: inline-block;
+      margin-top: 12px;
+      background: linear-gradient(135deg,#fb7185,#ef4444);
+      border: none;
+      color: white;
+      font-weight: 700;
+      border-radius: 12px;
+      padding:.6rem 1.2rem;
+      transition: transform .15s ease;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn:hover { transform: scale(1.05); }
+    .btn-dis { opacity: .85; cursor: default; }
+
+    footer.footer {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+    }                       
+
+    /*  Footer */
+    .footer {
+      border-top:2px groove #fb7185;
+      color: #e0e0e0;
+      width: 100%;
+      margin: 0;
+      padding: 1rem 1rem;
+      box-sizing: border-box;
+      position: relative;
+      background: rgba(3, 3, 3, 0.78);
+      z-index: 1;
+    }
+    .footer::before { content: ""; position: absolute; inset: 0; z-index: -1; }
+
+    /* Footer link sections */
+    .footer-links {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 24px;
+      margin-bottom: 2rem;
+      text-align: left;
+    }
+    .footer-links h4 { margin-bottom: 1rem; font-size: 1.1rem; color:#eca4af; }
+    .footer-links ul { list-style: none; padding: 0; margin: 0; }
+    .footer-links li { margin-bottom: 0.5rem; font-size: 0.95rem; color: #caa8a8; cursor: pointer; }
+    .footer-links li:hover { text-decoration: none; color: #caa8a8; transform: scale(0.98); }
+
+    /* Social media */
+    .social-media{ display: flex; justify-content: center; gap:30px; }
+    .social-media img{ height:auto; width:25px; }
+    .social-media img.insta:hover { animation: pulse-insta 1.2s ease-in-out infinite; transform: scale(1.2); }
+    @keyframes pulse-insta{ 0%, 100% { box-shadow: 0 0 5px rgba(193, 53, 132, 0.6); } 50% { box-shadow: 0 0 20px rgba(193, 53, 132, 0.9); } }
+    .social-media img.twitter:hover { animation: pulse-twitter 1.2s ease-in-out infinite; transform: scale(1.2); }
+    @keyframes pulse-twitter { 0%, 100% { box-shadow: 0 0 5px rgba(29, 161, 242, 0.6); } 50% { box-shadow: 0 0 20px rgba(29, 161, 242, 0.9); } }
+    .social-media img.youtube:hover { animation: pulse-youtube 1.2s ease-in-out infinite; transform: scale(1.2); }
+    @keyframes pulse-youtube { 0%, 100% { box-shadow: 0 0 5px rgba(255, 0, 0, 0.6); } 50% { box-shadow: 0 0 20px rgba(255, 0, 0, 0.9); } }
+    .footer p { text-align: center; font-size: 0.9rem; color: #938b91; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <!-- Hero -->
+  <div class="hero">
+    <h1>FEED Forward</h1>
+    <p>"We don't just feed mouths! we fuel futures!"</p>
+  </div>
+
+  <!-- Feature Cards -->
+  <div class="grid">
+    <div class="card">
+      <h3>🍴 Food Rescue</h3>
+      <p>Donate & claim leftover meals on campus.</p>
+      <!-- Deep-link into Streamlit app -->
+      <a href="?go=food" class="btn">Open Food Rescue</a>
+    </div>
+    <div class="card">
+      <h3>🛒 Smart Ration Planner</h3>
+      <p>Plan healthy groceries within a budget. (concept)</p>
+      <span class="btn-dis">Coming Soon</span>
+    </div>
+    <div class="card">
+      <h3>🗺️ Meal Map</h3>
+      <p>Find free/low-cost meals nearby. (concept)</p>
+      <span class="btn-dis">Coming Soon</span>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-links">
+      <div>
+        <h4>Explore</h4>
+        <ul>
+          <li>Donate</li>
+          <li>Explorer</li>
+          <li>Food Planner</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <ul>
+          <li>About Us</li>
+          <li>How It Works</li>
+          <li>Community</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Account</h4>
+        <ul>
+          <li>Login/Register</li>
+          <li>Dashboard</li>
+          <li>Notifications</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="social-media">
+      <span><img src="instagram.png" alt="Instagram" class="insta"></span>
+      <span><img src="twitter.png" alt="Twitter" class="twitter"></span>
+      <span><img src="youtube.png" alt="YouTube" class="youtube"></span>
+    </div>
+    <center><p>© 2025 FeedForward. All rights reserved.</p></center>
+  </footer>
+</div>
+</body>
+</html>
+""").strip()
+
 # ---------- Pages ----------
-def home_page():
-    # Hero
-    st.markdown(
-        """
-        <div class="hero">
-          <h1>🍱 Feed Forward</h1>
-          <h3>we don't just feed mouths! we fuel futures</h3>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    c1, c2, c3 = st.columns(3)
-
-    with c1:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.markdown("### 🍽️ Food Rescue")
-        st.markdown('<p class="muted">Donate & claim leftover meals on campus.</p>', unsafe_allow_html=True)
-        st.button("Open Food Rescue", key="open_food_rescue_btn", on_click=lambda: _goto("Food Rescue"), type="primary")
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with c2:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.markdown("### 🛒 Smart Ration Planner")
-        st.markdown('<p class="muted">Plan healthy groceries within a budget. (concept)</p>', unsafe_allow_html=True)
-        st.button("Coming soon", disabled=True, key="soon_ration_btn")
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with c3:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.markdown("### 🗺️ Meal Map")
-        st.markdown('<p class="muted">Find free/low-cost meals nearby. (concept)</p>', unsafe_allow_html=True)
-        st.button("Coming soon", disabled=True, key="soon_meal_btn")
-        st.markdown("</div>", unsafe_allow_html=True)
-
 def _goto(name:str):
     st.session_state["_nav_target"] = name
     st.rerun()
@@ -244,28 +408,12 @@ def role_page():
 def donor_post_page():
     st.subheader("Post Surplus")
     with st.form("post_form", clear_on_submit=True):
-        # Each input stacked vertically
-        food_desc = st.text_area(
-            "What food is available?",
-            placeholder="e.g., Veg biryani, curd, salad"
-        )
-
-        qty = st.number_input(
-            "Quantity (meals)", min_value=1, max_value=2000, value=10, step=1
-        )
-
+        food_desc = st.text_area("What food is available?", placeholder="e.g., Veg biryani, curd, salad")
+        qty = st.number_input("Quantity (meals)", min_value=1, max_value=2000, value=10, step=1)
         veg_type = st.selectbox("Type", ["Veg", "Non-veg", "Mixed"])
-
-        until_time = st.time_input(
-            "Available until (today)", value=dtime(21, 0)
-        )
-
-        allergens = st.text_input(
-            "Allergens / notes (optional)", placeholder="peanuts, gluten, dairy…"
-        )
-
+        until_time = st.time_input("Available until (today)", value=dtime(21, 0))
+        allergens = st.text_input("Allergens / notes (optional)", placeholder="peanuts, gluten, dairy…")
         address = st.text_input("Pickup address / location")
-
         submitted = st.form_submit_button("Post")
 
     if submitted:
@@ -300,7 +448,6 @@ def donor_post_page():
         st.markdown(f"<div class='codebox'><code>{post['donor_code']}</code></div>", unsafe_allow_html=True)
         st.info("Use **My Posts** to track or mark completed.")
 
-
 def _update_status(post_id: str, required_status: str, new_status: str, allow_any_status: bool=False):
     df = load_data()
     mask = df["id"] == post_id
@@ -314,7 +461,6 @@ def _update_status(post_id: str, required_status: str, new_status: str, allow_an
     df.loc[mask, "status"] = new_status
     if new_status == STATUS_EXPIRED:
         df.loc[mask, "ready_until_iso"] = datetime.now()
-
     save_data(df)
     st.success(f"Post {post_id} updated → {new_status}.")
 
@@ -345,15 +491,9 @@ def donor_my_posts_page():
         st.info("No posts yet.")
         return
 
-    # Pretty status column with emojis (reliable across Streamlit versions)
     def status_badge(s: str) -> str:
         s = (s or "").lower()
-        return {
-            "open": "🟢 Open",
-            "claimed": "🔵 Claimed",
-            "completed": "✅ Completed",
-            "expired": "🔴 Expired",
-        }.get(s, s)
+        return {"open":"🟢 Open","claimed":"🔵 Claimed","completed":"✅ Completed","expired":"🔴 Expired"}.get(s, s)
 
     mine2 = mine.copy()
     mine2["Status"] = mine2["status"].map(status_badge)
@@ -364,10 +504,7 @@ def donor_my_posts_page():
     })[["Post ID","Food","Meals","Type","Until","Status","Claimer","Claimer phone","Pickup code"]]
 
     st.data_editor(
-        mine2,
-        hide_index=True,
-        use_container_width=True,
-        disabled=True,
+        mine2, hide_index=True, use_container_width=True, disabled=True,
         column_config={
             "Meals": st.column_config.NumberColumn(format="%d", width="small"),
             "Type": st.column_config.TextColumn(width="small"),
@@ -408,7 +545,6 @@ def volunteer_find_claim_page():
         st.info("No open posts right now. Check again soon.")
         return
 
-    # Nicer filters (radio/toggle/number)
     with st.container():
         f1, f2, f3 = st.columns([1.1,1,1])
         with f1:
@@ -419,7 +555,6 @@ def volunteer_find_claim_page():
             min_meals = st.number_input("Min meals", min_value=0, value=0, step=1, key="v_min_meals")
 
     now = datetime.now()
-
     if veg_filter != "All":
         open_df = open_df[open_df["veg_type"] == veg_filter]
     if only_open_now:
@@ -427,7 +562,6 @@ def volunteer_find_claim_page():
     if min_meals > 0:
         open_df = open_df[pd.to_numeric(open_df["qty_meals"], errors="coerce").fillna(0).astype(int) >= min_meals]
 
-    # Compact display using data_editor + emoji type tag
     def veg_tag(v: str) -> str:
         return {"Veg":"🥦 Veg","Non-veg":"🍗 Non-veg","Mixed":"🍛 Mixed"}.get(v, v)
 
@@ -440,9 +574,7 @@ def volunteer_find_claim_page():
     })[["Post ID","Donor","Food","Meals","Type","Address","Until","Phone"]]
 
     st.data_editor(
-        df_display,
-        hide_index=True,
-        use_container_width=True,
+        df_display, hide_index=True, use_container_width=True,
         column_config={
             "Meals": st.column_config.NumberColumn(format="%d", step=1, width="small"),
             "Type": st.column_config.TextColumn(width="small"),
@@ -500,10 +632,7 @@ def volunteer_my_claims_page():
     })[["Post ID","Donor","Food","Meals","Type","Address","Until","Status","Phone","Your code"]]
 
     st.data_editor(
-        mine2,
-        hide_index=True,
-        use_container_width=True,
-        disabled=True,
+        mine2, hide_index=True, use_container_width=True, disabled=True,
         column_config={
             "Meals": st.column_config.NumberColumn(format="%d", width="small"),
             "Type": st.column_config.TextColumn(width="small"),
@@ -536,7 +665,6 @@ def dashboard_page():
     claimed_posts = int((df["status"] == STATUS_CLAIMED).sum()) if not df.empty else 0
     expired_posts = int((df["status"] == STATUS_EXPIRED).sum()) if not df.empty else 0
 
-    # Chip-style metrics
     col1, col2, col3, col4, col5 = st.columns(5)
     for col, label, value in [
         (col1, "Total posts", total_posts),
@@ -548,9 +676,9 @@ def dashboard_page():
         with col:
             st.markdown(
                 f"""
-                <div class="chip-metric">
-                  <div class="chip-label">{label}</div>
-                  <div class="chip-value">{value}</div>
+                <div class="codebox" style="border-style:solid;border-radius:14px">
+                  <div style="color:#94a3b8;font-size:.85rem">{label}</div>
+                  <div style="font-size:1.4rem;font-weight:800">{value}</div>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -598,11 +726,9 @@ def dashboard_page():
         st.info("No data yet. Post and claim to see impact.")
 
 def food_rescue_simple_page():
-    # (Optional demo entry point retained)
     st.subheader("Food Rescue – Quick Actions")
     tab_donor, tab_receiver = st.tabs(["🍱 Donor Box", "🤝 Receiver Box"])
 
-    # DONOR BOX
     with tab_donor:
         st.markdown("Post surplus food so receivers can claim it.")
         with st.form("donor_box_form", clear_on_submit=True):
@@ -659,7 +785,6 @@ def food_rescue_simple_page():
         else:
             st.caption("No matching posts yet.")
 
-    # RECEIVER BOX
     with tab_receiver:
         st.markdown("Find open posts and claim them.")
         df = load_data()
@@ -721,6 +846,12 @@ def food_rescue_simple_page():
                 _complete_post(c_post_id, donor_code, actor="volunteer")
 
 # ---------- Main router ----------
+def home_page():
+    # Render the HTML landing page inside Streamlit
+    import streamlit.components.v1 as components
+    # Make the iframe tall and avoid iframe scrolling to prevent nested scrollbars
+    components.html(HOME_HTML, height=760, scrolling=False)
+
 def food_rescue_router():
     require_session()
     if not st.session_state.role:
