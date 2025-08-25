@@ -26,18 +26,19 @@ st.set_page_config(page_title="Food Rescue @ Campus", page_icon="🍱", layout="
 # ---------- Visual theme (CSS overrides) ----------
 st.markdown("""
 <style>
-  /* --- App background --- */
+#   /* --- App background --- */
 #   .stApp {
 #     background: linear-gradient(rgba(10,12,20,.35), rgba(10,12,20,.55)),
 #                 url('bg.jpg') no-repeat center center fixed;
-#     background-size: cover;
-#   }
-#   .block-container { padding-top: 1.2rem; max-width: 1200px; }
+#       background-image: src"bg.jpg";
+#      background-size: cover;
+#    }
+#    .block-container { padding-top:2.2rem; max-width: 1200px; }
 
             /* Container */
     body {
-      background: #0f172a;
-      background-image: url("bg.jpg");
+      background: pink;
+      background-image: url('bg.jpg');
       background-repeat: no-repeat;
       background-size: cover;
       font-family: Arial, sans-serif;
@@ -54,21 +55,23 @@ st.markdown("""
     background: rgba(16,15,15,.35);
     border: 1px solid rgba(255,255,255,.08);
     border-radius: 22px;
-    backdrop-filter: blur(6px);
-    box-shadow: 0 20px 50px rgba(0,0,0,.35);
+    backdrop-filter: blur(1px);
+    box-shadow: 0 20px 50px rgba(0,70,76,.35);
   }
   .hero h1 {
     margin: 0 0 .25rem 0;
     font-family: "Ubuntu", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     font-weight: 800;
     font-size: clamp(2.4rem, 5vw, 3.4rem);
-    letter-spacing: .3px;
-    text-transform: uppercase;
+    # font-color: rgb(1, 248, 198);
+    letter-spacing: 20px;
+    # text-transform: uppercase;
   }
   .hero p {
     margin: 0;
     color: #e2e8f0;
     font-style: italic;
+    letter-spacing: 2px;
     font-family: "Rubik", sans-serif;
   }
 
@@ -76,7 +79,7 @@ st.markdown("""
   .card-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 28px;
+    gap: 48px;
     margin: 22px auto 34px;
     max-width: 980px;
   }
@@ -109,6 +112,7 @@ st.markdown("""
   /* --- primary button --- */
   .stButton>button[kind="primary"] {
     background: linear-gradient(135deg,#fb7185,#ef4444);
+    margin-top:12px;
     border: none; color: white; font-weight: 800;
     border-radius: 14px; padding:.7rem 1.25rem;
     box-shadow: 0 10px 24px rgba(239,68,68,.35);
@@ -297,22 +301,23 @@ def home_page():
     st.markdown('<div class="card-grid">', unsafe_allow_html=True)
 
     c1, c2, c3 = st.columns(3)
+
     with c1:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
+        #st.markdown('<div class="card">', unsafe_allow_html=True)
         st.markdown("### 🍽️&nbsp;&nbsp;Food Rescue", unsafe_allow_html=True)
         st.markdown("<p>Donate & claim leftover meals on campus.</p>", unsafe_allow_html=True)
         st.button("Open Food Rescue", key="open_food_rescue_btn_home", on_click=lambda: _goto("Food Rescue"), type="primary")
         st.markdown("</div>", unsafe_allow_html=True)
 
     with c2:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
+        #st.markdown('<div class="card">', unsafe_allow_html=True)
         st.markdown("### 🛒&nbsp;&nbsp;Smart Ration Planner", unsafe_allow_html=True)
         st.markdown("<p>Plan healthy groceries within a budget. (concept)</p>", unsafe_allow_html=True)
         st.markdown('<span class="btn-dis" aria-disabled="true">Coming Soon</span>', unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
     with c3:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
+        #st.markdown('<div class="card">', unsafe_allow_html=True)
         st.markdown("### 🗺️&nbsp;&nbsp;Meal Map", unsafe_allow_html=True)
         st.markdown("<p>Find free/low-cost meals nearby. (concept)</p>", unsafe_allow_html=True)
         st.markdown('<span class="btn-dis" aria-disabled="true">Coming Soon</span>', unsafe_allow_html=True)
@@ -353,8 +358,8 @@ def home_page():
 
           <div class="social-media" aria-label="Social media">
             <a href="#" aria-label="Instagram"><img src="instagram.png" alt="Instagram" /></a>
-            <a href="#" aria-label="Twitter"><img src="twitter.png" alt="Twitter/X" /></a>
-            <a href="#" aria-label="YouTube"><img src="youtube.png" alt="YouTube" /></a>
+            <a href="#" aria-label="Twitter"><img src="x.png" alt="Twitter/X" /></a>
+            <a href="#" aria-label="YouTube"><img src="Youtube.png" alt="YouTube" /></a>
           </div>
 
           <p style="text-align:center;margin:0;">© 2025 FeedForward. All rights reserved.</p>
