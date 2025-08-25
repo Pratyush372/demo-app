@@ -12,7 +12,7 @@ import string
 from dateutil import tz
 
 # ---------- App Meta ----------
-APP_TITLE = "🍱 Food Rescue @ Campus"
+APP_TITLE = "🍱 Food Rescue"
 DATA_FILE = Path("surplus.csv")
 
 STATUS_OPEN = "open"
@@ -21,7 +21,7 @@ STATUS_COMPLETED = "completed"
 STATUS_EXPIRED = "expired"
 
 # ---------- One-time page config ----------
-st.set_page_config(page_title="Food Rescue @ Campus", page_icon="🍱", layout="wide")
+st.set_page_config(page_title="#Food Rescue ", page_icon="🍱", layout="wide")
 
 # ---------- Visual theme (CSS overrides) ----------
 st.markdown("""
